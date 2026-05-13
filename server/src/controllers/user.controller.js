@@ -8,25 +8,22 @@ import jwt from 'jsonwebtoken'
 const generateAccessAndRefreshTokens=async (userId)=>{
     try{
         const user= await User.findById(userId)
-        const accessToken=  user.generateRefreshToken()
-        const refreshToken= user.generateAccessToken()
+        const accessToken=  user.generateAccessToken()
+        const refreshToken= user.generateRefreshToken()
 
         user.refreshToken=refreshToken
-        user.accessToken=accessToken
         await user.save({ validateBeforeSave:false })
 
         return{accessToken,refreshToken}
-    }catch{
-        throw new ApiError(500,"Something went wrong While generating Tokens")
+    }catch (error) {
+        throw new ApiError(500,"Something went wrong while generating tokens")
     }
 }
 const registerUser=asyncHandler(async (req,res)=>{
     const {fullName,email,username,password,role}=req.body
-    if(
-        [fullName,email,username,password].some((field)=>{
-            field?.trim()==""
-        })
-    ){
+    if (
+        [fullName, email, username, password].some((field) => field?.trim() === "")
+    ) {
         throw new ApiError(400,"All fields are required")
     }
 
@@ -77,11 +74,11 @@ const loginUser=asyncHandler(async (req,res)=>{
     
     const {accessToken,refreshToken}=await generateAccessAndRefreshTokens(user._id)
 
-  const loggedInUser= await User.findById(user._id).select
-    ("-password -refreshToken")
+  const loggedInUser = await User.findById(user._id).select("-password -refreshToken")
     const options={
         httpOnly:true,
-        secure:true
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'Lax'
     }
     return res.status(200)
     .cookie("accessToken",accessToken,options)
@@ -107,10 +104,11 @@ const logoutUser=asyncHandler(async (req,res)=>{
             new:true
         }
     )
-    const options={
-        httpOnly:true,
-        secure:true
-    }
+        const options = {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'Lax'
+        }
     return res.status(200).clearCookie("accessToken",options)
     .clearCookie("refreshToken",options).json(new ApiResponse(200,{},"User logged Out"))
 })
@@ -140,10 +138,10 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     
         const options = {
             httpOnly: true,
-            secure: true
+            secure: process.env.NODE_ENV === 'production',
         }
     
-        const {accessToken, newRefreshToken} = await generateAccessAndRefereshTokens(user._id)
+        const {accessToken, refreshToken: newRefreshToken} = await generateAccessAndRefreshTokens(user._id)
     
         return res
         .status(200)

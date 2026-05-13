@@ -72,6 +72,14 @@ const getAllEvents = asyncHandler(async (req, res) => {
         }
     }
 
+    if (req.query.myEvents === 'true' && req.user) {
+        if (req.user.role === 'teacher') {
+            query.organizer = req.user._id;
+        } else if (req.user.role === 'student') {
+            query.attendees = req.user._id;
+        }
+    }
+
     const events = await Event.find(query).populate('organizer', 'fullName email');
     
     return res.status(200).json(
