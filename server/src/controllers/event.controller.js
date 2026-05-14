@@ -3,6 +3,8 @@ import { ApiError } from '../utils/ApiError.js';
 import { ApiResponse } from '../utils/ApiResponse.js';
 import { Event } from '../models/event.model.js';
 import { uploadOnCloudinary } from '../utils/cloudinary.js';
+import { Alert } from '../models/alert.model.js';
+import { emitNotification } from '../socket.js';
 
 const createEvent = asyncHandler(async (req, res) => {
     const { title, description, date, time, location } = req.body;
@@ -31,7 +33,8 @@ const createEvent = asyncHandler(async (req, res) => {
         time,
         location,
         coverImage: coverImageUrl,
-        organizer: req.user._id
+        organizer: req.user._id,
+        status: req.user.role === 'admin' ? 'approved' : 'pending'
     });
 
     return res.status(201).json(
@@ -40,13 +43,22 @@ const createEvent = asyncHandler(async (req, res) => {
 });
 const getAllEvents = asyncHandler(async (req, res) => {
     const { search, category, department, location, startDate, endDate } = req.query;
-    let query = {};
+    let query = { status: 'approved' }; 
     
+    if (req.query.myEvents === 'true' && req.user) {
+        query = {}; 
+        if (req.user.role === 'teacher') {
+            query.organizer = req.user._id;
+        } else if (req.user.role === 'student') {
+            query.attendees = req.user._id;
+        }
+    }
+
     if (search) {
+        const searchPattern = search.length <= 3 ? `\\b${search}\\b` : search;
         query.$or = [
-            { title: { $regex: search, $options: 'i' } },
-            { description: { $regex: search, $options: 'i' } },
-            { location: { $regex: search, $options: 'i' } }
+            { title: { $regex: searchPattern, $options: 'i' } },
+            { description: { $regex: searchPattern, $options: 'i' } }
         ];
     }
 
@@ -72,14 +84,6 @@ const getAllEvents = asyncHandler(async (req, res) => {
         }
     }
 
-    if (req.query.myEvents === 'true' && req.user) {
-        if (req.user.role === 'teacher') {
-            query.organizer = req.user._id;
-        } else if (req.user.role === 'student') {
-            query.attendees = req.user._id;
-        }
-    }
-
     const events = await Event.find(query).populate('organizer', 'fullName email');
     
     return res.status(200).json(
@@ -93,6 +97,11 @@ const getEventById = asyncHandler(async (req, res) => {
 
     if (!event) {
         throw new ApiError(404, "Event not found");
+    }
+
+    // Restrict access to unapproved events
+    if (event.status !== 'approved' && req.user?.role !== 'admin' && event.organizer._id.toString() !== req.user?._id?.toString()) {
+        throw new ApiError(403, "This event is pending approval and is not public yet");
     }
 
     return res.status(200).json(
@@ -113,12 +122,25 @@ const joinEvent = asyncHandler(async (req, res) => {
         throw new ApiError(404, "Event not found");
     }
 
-    if (event.attendees.includes(req.user._id)) {
+    if (event.attendees.some(attendeeId => attendeeId.toString() === req.user._id.toString())) {
         throw new ApiError(400, "You have already joined this event");
     }
 
     event.attendees.push(req.user._id);
     await event.save();
+
+    // Create a notification for the student
+    const alert = await Alert.create({
+        user: req.user._id,
+        event: event._id,
+        category: "registration",
+        title: "Registration Successful",
+        message: `You have successfully registered for the event: "${event.title}".`,
+        type: "success"
+    });
+
+    // Emit real-time notification
+    emitNotification(req.user._id, alert);
 
     return res.status(200).json(
         new ApiResponse(200, event, "Successfully joined the event")
@@ -134,7 +156,7 @@ const leaveEvent = asyncHandler(async (req, res) => {
         throw new ApiError(404, "Event not found");
     }
 
-    if (!event.attendees.includes(req.user._id)) {
+    if (!event.attendees.some(attendeeId => attendeeId.toString() === req.user._id.toString())) {
         throw new ApiError(400, "You have not joined this event");
     }
 
@@ -188,6 +210,9 @@ const updateEvent = asyncHandler(async (req, res) => {
         }
     }
 
+    const dateChanged = date && new Date(date).getTime() !== new Date(event.date).getTime();
+    const timeChanged = time && time !== event.time;
+
     event.title = title || event.title;
     event.description = description || event.description;
     event.date = date || event.date;
@@ -196,6 +221,24 @@ const updateEvent = asyncHandler(async (req, res) => {
     event.coverImage = coverImageUrl;
 
     await event.save();
+
+    // Notify registered students if date or time changed
+    if ((dateChanged || timeChanged) && event.attendees.length > 0) {
+        const notifications = event.attendees.map(userId => ({
+            user: userId,
+            event: event._id,
+            category: 'update',
+            title: "Event Schedule Changed",
+            message: `The schedule for "${event.title}" has been updated to ${new Date(event.date).toLocaleDateString()} at ${event.time}.`,
+            type: "warning"
+        }));
+        const alerts = await Alert.insertMany(notifications);
+        
+        // Emit notifications to each student
+        alerts.forEach(alert => {
+            emitNotification(alert.user, alert);
+        });
+    }
 
     return res.status(200).json(
         new ApiResponse(200, event, "Event updated successfully")

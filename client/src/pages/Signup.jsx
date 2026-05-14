@@ -228,8 +228,8 @@ const Signup = () => {
                   onChange={handleChange}
                   className="w-full border-b-2 border-gray-200 py-3 text-[#0A2540] font-medium bg-transparent focus:outline-none focus:border-[#0A2540] transition-colors rounded-none appearance-none cursor-pointer"
                 >
-                  <option value="student">Student Scholar</option>
-                  <option value="teacher">Faculty Member</option>
+                  <option value="student">Student</option>
+                  <option value="teacher">Teacher</option>
                 </select>
               </div>
 

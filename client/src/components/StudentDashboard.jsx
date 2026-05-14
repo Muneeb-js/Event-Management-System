@@ -21,30 +21,23 @@ const StudentDashboard = ({ user, dashboardData }) => {
     <div className="min-h-screen bg-[#F8F9FA]">
       <Navbar />
 
-      {/* Top Bar */}
-      <div className="bg-white border-b border-gray-100 px-8 py-4 flex items-center justify-between">
-        <div>
-          <p className="text-[#B8860B] text-[10px] font-bold uppercase tracking-[0.2em]">Student Portal</p>
-          <h1 className="text-xl font-extrabold text-[#0A2540]">Welcome back, {user?.fullName?.split(' ')[0] || 'Scholar'}</h1>
-        </div>
-        <div className="flex items-center gap-3">
-          <Link to="/events" className="px-4 py-2 bg-[#FFD700] text-[#0A2540] text-[10px] font-bold uppercase tracking-widest rounded hover:bg-yellow-300 transition-colors">
-            Discover Events
-          </Link>
-          <img
-            src={user?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.fullName || 'S')}&background=0A2540&color=fff`}
-            alt={user?.fullName}
-            className="w-9 h-9 rounded-full object-cover border-2 border-gray-100 cursor-pointer"
-            onClick={() => navigate('/edit-profile')}
-          />
-        </div>
-      </div>
+
 
       <div className="max-w-[1400px] mx-auto px-8 py-8 space-y-8">
+        {/* Header */}
+        <div>
+          <p className="text-[#B8860B] text-[10px] font-bold uppercase tracking-[0.2em] mb-1">
+            {user?.role === 'teacher' ? 'Faculty Portal' : 'Student Portal'}
+          </p>
+          <h1 className="text-3xl font-extrabold text-[#0A2540] tracking-tight">My Dashboard</h1>
+          <p className="text-gray-400 text-sm mt-1">Welcome back, {user?.fullName?.split(' ')[0] || 'Scholar'}</p>
+        </div>
         {/* Stats Row */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
           {[
-            { label: 'Events Attended', value: (dashboardData?.eventsAttendedCount || 0).toString().padStart(2, '0'), accent: true },
+            user?.role === 'teacher' 
+              ? { label: 'Events Organized', value: (dashboardData?.organizedEventsCount || 0).toString().padStart(2, '0'), accent: true }
+              : { label: 'Events Attended', value: (dashboardData?.eventsAttendedCount || 0).toString().padStart(2, '0'), accent: true },
             { label: 'Upcoming Events', value: (dashboardData?.upcomingCount || 0).toString().padStart(2, '0'), accent: false },
             { label: 'This Month', value: (dashboardData?.calendarEvents?.length || 0).toString().padStart(2, '0'), accent: false },
             { label: 'Alerts', value: (recentAlerts.length || 0).toString().padStart(2, '0'), accent: false },

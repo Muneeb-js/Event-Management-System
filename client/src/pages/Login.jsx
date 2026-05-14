@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import { useAuth } from '../context/AuthContext';
 import config from '../config';
 
 const Login = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     identifier: '',
@@ -58,7 +60,8 @@ const Login = () => {
 
       if (response.data?.success) {
         toast.success('Welcome back.');
-        navigate('/dashboard');
+        login(response.data.data.user);
+        navigate('/');
       }
     } catch (error) {
       console.error('Login error:', error);

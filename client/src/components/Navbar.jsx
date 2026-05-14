@@ -1,25 +1,76 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
+import { useSocket } from '../context/SocketContext';
+import config from '../config';
 
 const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, isLoggedIn, loading, logout } = useAuth();
+  const socket = useSocket();
   const [showDropdown, setShowDropdown] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [alerts, setAlerts] = useState([]);
+  const [showNotifications, setShowNotifications] = useState(false);
   const dropdownRef = useRef(null);
+  const notificationRef = useRef(null);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
         setShowDropdown(false);
       }
+      if (notificationRef.current && !notificationRef.current.contains(e.target)) {
+        setShowNotifications(false);
+      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      fetchAlerts();
+      // No need for polling interval now that we have sockets
+    }
+  }, [isLoggedIn]);
+
+  useEffect(() => {
+    if (socket) {
+      socket.on('newNotification', (notification) => {
+        setAlerts(prev => [notification, ...prev]);
+        toast.success(`New Notification: ${notification.title}`, {
+          icon: '🔔',
+          duration: 5000
+        });
+      });
+
+      return () => socket.off('newNotification');
+    }
+  }, [socket]);
+
+  const fetchAlerts = async () => {
+    try {
+      const res = await axios.get(`${config.API_BASE_URL}/dashboard/alerts`, { withCredentials: true });
+      if (res.data?.success) setAlerts(res.data.data);
+    } catch (err) {
+      console.error('Failed to fetch alerts');
+    }
+  };
+
+  const markAsRead = async (id) => {
+    try {
+      await axios.patch(`${config.API_BASE_URL}/dashboard/alerts/${id}/read`, {}, { withCredentials: true });
+      setAlerts(prev => prev.map(a => a._id === id ? { ...a, isRead: true } : a));
+    } catch (err) {
+      toast.error('Failed to mark as read');
+    }
+  };
+
+  const unreadCount = alerts.filter(a => !a.isRead).length;
 
   const handleLogout = async () => {
     const result = await logout();
@@ -36,7 +87,6 @@ const Navbar = () => {
     { name: 'Home', path: '/' },
     { name: 'Events', path: '/events' },
     { name: 'Calendar', path: '/calendar' },
-    { name: 'Dashboard', path: '/dashboard', authRequired: true },
     { name: 'Ask Anything', path: '/ask-anything' },
   ];
 
@@ -80,6 +130,57 @@ const Navbar = () => {
 
         {/* Right Side */}
         <div className="flex items-center gap-3">
+          {isLoggedIn && (
+            <div className="relative" ref={notificationRef}>
+              <button
+                onClick={() => setShowNotifications(!showNotifications)}
+                className="p-2 text-gray-400 hover:text-[#0A2540] relative transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+                {unreadCount > 0 && (
+                  <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-[9px] font-bold flex items-center justify-center rounded-full border-2 border-white">
+                    {unreadCount}
+                  </span>
+                )}
+              </button>
+
+              {showNotifications && (
+                <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-100 overflow-hidden z-50">
+                  <div className="px-4 py-3 border-b border-gray-50 flex items-center justify-between">
+                    <h3 className="text-[11px] font-bold text-[#0A2540] uppercase tracking-widest">Notifications</h3>
+                    <span className="text-[9px] text-gray-400 font-bold">{unreadCount} New</span>
+                  </div>
+                  <div className="max-h-96 overflow-y-auto">
+                    {alerts.length === 0 ? (
+                      <div className="px-4 py-8 text-center">
+                        <p className="text-[11px] text-gray-400 italic">No notifications yet</p>
+                      </div>
+                    ) : (
+                      alerts.map(alert => (
+                        <div
+                          key={alert._id}
+                          onClick={() => !alert.isRead && markAsRead(alert._id)}
+                          className={`px-4 py-3 border-b border-gray-50 cursor-pointer transition-colors ${!alert.isRead ? 'bg-blue-50/30 hover:bg-blue-50/50' : 'hover:bg-gray-50'}`}
+                        >
+                          <div className="flex justify-between items-start mb-1">
+                            <p className={`text-[11px] font-bold ${!alert.isRead ? 'text-[#0A2540]' : 'text-gray-500'}`}>{alert.title}</p>
+                            {!alert.isRead && <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-1" />}
+                          </div>
+                          <p className="text-[10px] text-gray-500 leading-relaxed mb-1">{alert.message}</p>
+                          <p className="text-[8px] text-gray-300 font-bold uppercase tracking-tighter">
+                            {new Date(alert.createdAt).toLocaleString()}
+                          </p>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           {isLoggedIn && (user?.role === 'teacher' || user?.role === 'admin') && (
             <Link to="/create-event"
               className="hidden md:flex items-center gap-2 px-4 py-1.5 bg-[#0A2540] text-white text-[10px] font-bold uppercase tracking-widest rounded hover:bg-gray-900 transition-colors">
@@ -101,7 +202,7 @@ const Navbar = () => {
                       alt="Profile"
                       className="w-7 h-7 rounded-full object-cover"
                     />
-                    <div className="hidden md:block text-left">
+                    <div className="hidden lg:block text-left">
                       <p className="text-[11px] font-bold text-[#0A2540] leading-none">{user?.fullName?.split(' ')[0]}</p>
                       <p className="text-[9px] text-gray-400 uppercase tracking-wider">{user?.role}</p>
                     </div>
@@ -140,7 +241,7 @@ const Navbar = () => {
                   )}
                 </div>
               ) : (
-                <div className="flex items-center gap-3">
+                <div className="hidden md:flex items-center gap-3">
                   <Link to="/login" className="text-[11px] font-bold text-[#0A2540] uppercase tracking-widest hover:text-gray-600 transition-colors">
                     Sign In
                   </Link>
@@ -173,10 +274,16 @@ const Navbar = () => {
             </Link>
           ))}
           {!isLoggedIn && (
-            <>
-              <Link to="/login" onClick={() => setMobileOpen(false)} className="block text-[11px] font-bold text-[#0A2540] uppercase tracking-widest py-2">Sign In</Link>
-              <Link to="/signup" onClick={() => setMobileOpen(false)} className="block text-[11px] font-bold text-[#0A2540] uppercase tracking-widest py-2">Register</Link>
-            </>
+            <div className="grid grid-cols-2 gap-3 pt-4 border-t border-gray-50">
+              <Link to="/login" onClick={() => setMobileOpen(false)} 
+                className="flex items-center justify-center px-4 py-2 text-[11px] font-bold text-[#0A2540] border border-[#0A2540] uppercase tracking-widest rounded hover:bg-gray-50 transition-colors">
+                Sign In
+              </Link>
+              <Link to="/signup" onClick={() => setMobileOpen(false)} 
+                className="flex items-center justify-center px-4 py-2 bg-[#0A2540] text-white text-[11px] font-bold uppercase tracking-widest rounded hover:bg-gray-900 transition-colors">
+                Register
+              </Link>
+            </div>
           )}
         </div>
       )}

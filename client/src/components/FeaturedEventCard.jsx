@@ -22,6 +22,9 @@ const FeaturedEventCard = ({ event }) => {
             src={image} 
             alt={title} 
             className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700"
+            onError={(e) => {
+              e.target.src = "https://images.unsplash.com/photo-1540575467063-178a50c2df87?q=80&w=2070&auto=format&fit=crop";
+            }}
           />
           {/* Badge */}
           <div className="absolute top-3 left-3 bg-[#FFD700] text-[#0A2540] text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">

@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import config from '../config';
+import Navbar from '../components/Navbar';
 
 const categoryColors = {
   ACADEMIC: 'bg-blue-50 text-blue-600',
@@ -64,26 +65,7 @@ const AdminDashboard = ({ data, user }) => {
 
   return (
     <div className="min-h-screen bg-[#F8F9FA]">
-      {/* Top Bar */}
-      <div className="bg-white border-b border-gray-100 px-8 py-4 flex items-center justify-between sticky top-0 z-40">
-        <div className="flex items-center gap-10">
-          <Link to="/" className="font-bold text-[#0A2540] text-sm tracking-tight uppercase">Academic Editorial UEMS</Link>
-          <div className="hidden md:flex items-center gap-6">
-            {[['Dashboard', '/dashboard'], ['Discovery', '/events'], ['Calendar', '/calendar']].map(([name, path]) => (
-              <Link key={name} to={path} className="text-[10px] font-bold uppercase tracking-widest text-gray-400 hover:text-gray-900 transition-colors">{name}</Link>
-            ))}
-          </div>
-        </div>
-        <div className="flex items-center gap-4">
-          <button onClick={() => navigate('/create-event')} className="flex items-center gap-2 px-4 py-2 bg-[#0A2540] text-white text-[10px] font-bold uppercase tracking-widest rounded hover:bg-gray-900 transition-colors">
-            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>
-            New Event
-          </button>
-          <div className="w-8 h-8 rounded-full border border-gray-200 overflow-hidden cursor-pointer" onClick={() => navigate('/edit-profile')}>
-            <img src={user?.avatar} alt="Profile" className="w-full h-full object-cover" />
-          </div>
-        </div>
-      </div>
+      <Navbar />
 
       <div className="p-8 space-y-8">
         {/* Header */}

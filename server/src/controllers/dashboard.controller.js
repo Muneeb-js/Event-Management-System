@@ -4,10 +4,45 @@ import { ApiError } from '../utils/ApiError.js';
 import { Event } from '../models/event.model.js';
 import { Alert } from '../models/alert.model.js';
 import { User } from '../models/user.model.js';
+import { emitNotification } from '../socket.js';
+
+const checkAndCreateReminders = async (userId) => {
+  const now = new Date();
+  const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000);
+
+  const upcomingEvents = await Event.find({
+    attendees: userId,
+    date: { $gte: now, $lte: oneHourLater }
+  });
+
+  for (const event of upcomingEvents) {
+    const existingAlert = await Alert.findOne({
+      user: userId,
+      event: event._id,
+      category: 'reminder'
+    });
+
+    if (!existingAlert) {
+      const alert = await Alert.create({
+        user: userId,
+        event: event._id,
+        category: 'reminder',
+        title: "Event Starting Soon!",
+        message: `Your event "${event.title}" starts in less than an hour at ${event.time}.`,
+        type: "info"
+      });
+      emitNotification(userId, alert);
+    }
+  }
+};
 
 const getDashboardData = asyncHandler(async (req, res) => {
   const userId = req.user._id;
   const user = await User.findById(userId);
+
+  if (user.role === 'student' || user.role === 'teacher') {
+    await checkAndCreateReminders(userId);
+  }
 
   if (user.role === 'admin') {
     const allEvents = await Event.find({}).populate('organizer', 'fullName email avatar');
@@ -100,6 +135,8 @@ const getDashboardData = asyncHandler(async (req, res) => {
 
   // Student/Teacher Dashboard Logic
   const attendedEvents = await Event.find({ attendees: userId });
+  const organizedEventsCount = user.role === 'teacher' ? await Event.countDocuments({ organizer: userId }) : 0;
+  
   const now = new Date();
   let eventsAttendedCount = 0;
   let upcomingCount = 0;
@@ -122,12 +159,16 @@ const getDashboardData = asyncHandler(async (req, res) => {
   });
 
   const recentAlerts = await Alert.find({ user: userId }).sort({ createdAt: -1 }).limit(5);
-  const recommendedEvents = await Event.find({ attendees: { $ne: userId } }).limit(3);
+  const recommendedEvents = await Event.find({ 
+    attendees: { $ne: userId },
+    status: 'approved'
+  }).limit(3);
 
   return res.status(200).json(
     new ApiResponse(200, {
-      role: 'student',
+      role: user.role,
       eventsAttendedCount,
+      organizedEventsCount,
       upcomingCount,
       calendarEvents,
       recentAlerts,
@@ -164,4 +205,21 @@ const rejectEvent = asyncHandler(async (req, res) => {
   return res.status(200).json(new ApiResponse(200, event, 'Event rejected successfully'));
 });
 
-export { getDashboardData, approveEvent, rejectEvent };
+const getUserAlerts = asyncHandler(async (req, res) => {
+  const alerts = await Alert.find({ user: req.user._id }).sort({ createdAt: -1 });
+  return res.status(200).json(new ApiResponse(200, alerts, 'Alerts fetched successfully'));
+});
+
+const markAlertAsRead = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const alert = await Alert.findOneAndUpdate(
+    { _id: id, user: req.user._id },
+    { isRead: true },
+    { new: true }
+  );
+
+  if (!alert) throw new ApiError(404, 'Alert not found');
+  return res.status(200).json(new ApiResponse(200, alert, 'Alert marked as read'));
+});
+
+export { getDashboardData, approveEvent, rejectEvent, getUserAlerts, markAlertAsRead };

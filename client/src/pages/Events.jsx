@@ -22,6 +22,9 @@ const EventCard = ({ event }) => (
         src={event.coverImage || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?q=80&w=800&auto=format&fit=crop'}
         alt={event.title}
         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+        onError={(e) => {
+          e.target.src = "https://images.unsplash.com/photo-1540575467063-178a50c2df87?q=80&w=800&auto=format&fit=crop";
+        }}
       />
       <div className="absolute inset-0 bg-gradient-to-t from-[#0A2540]/60 to-transparent" />
       <span className={`absolute top-3 left-3 text-[8px] font-bold px-2 py-0.5 rounded border tracking-widest ${categoryColors[event.category] || categoryColors.ALL}`}>
@@ -43,7 +46,9 @@ const EventCard = ({ event }) => (
           {event.location}
         </span>
       </div>
-      <p className="text-[11px] text-gray-400 font-serif italic line-clamp-2 flex-1">{event.description}</p>
+      <p className="text-[11px] text-gray-400 font-serif italic line-clamp-2 flex-1">
+        {event.description?.replace(/<[^>]*>?/gm, '')}
+      </p>
       <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-50">
         <div className="flex items-center gap-2">
           <img
@@ -86,8 +91,9 @@ const Events = () => {
     }
   };
 
+  const searchRegex = new RegExp(search.length <= 3 ? `\\b${search}\\b` : search, 'i');
   const filtered = events
-    .filter(e => !search || e.title.toLowerCase().includes(search.toLowerCase()) || e.location?.toLowerCase().includes(search.toLowerCase()))
+    .filter(e => !search || searchRegex.test(e.title) || searchRegex.test(e.description || ''))
     .sort((a, b) => {
       if (sortBy === 'date') return new Date(a.date) - new Date(b.date);
       if (sortBy === 'attendees') return (b.attendees?.length || 0) - (a.attendees?.length || 0);

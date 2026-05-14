@@ -61,7 +61,7 @@ const Home = () => {
           </div>
 
           {/* Stats Bar */}
-          <div className="mt-20 grid grid-cols-3 gap-8 max-w-lg">
+          <div className="mt-20 grid grid-cols-1 sm:grid-cols-3 gap-8 max-w-lg">
             {[
               { label: 'Active Events', value: '12+' },
               { label: 'Campus Members', value: '500+' },
@@ -109,6 +109,9 @@ const Home = () => {
                     src={event.coverImage || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?q=80&w=800&auto=format&fit=crop'}
                     alt={event.title}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    onError={(e) => {
+                      e.target.src = "https://images.unsplash.com/photo-1540575467063-178a50c2df87?q=80&w=800&auto=format&fit=crop";
+                    }}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#0A2540]/60 to-transparent" />
                   <span className={`absolute top-4 left-4 text-[9px] font-bold px-2 py-0.5 rounded tracking-widest ${categoryColors[event.category] || categoryColors.GENERAL}`}>
@@ -127,7 +130,9 @@ const Home = () => {
                       {event.location}
                     </span>
                   </div>
-                  <p className="text-gray-500 text-[12px] font-serif italic line-clamp-2 mb-4">{event.description}</p>
+                  <p className="text-gray-500 text-[12px] font-serif italic line-clamp-2 mb-4">
+                    {event.description?.replace(/<[^>]*>?/gm, '')}
+                  </p>
                   <div className="flex items-center justify-between pt-4 border-t border-gray-50">
                     <span className="text-[10px] text-gray-400">{event.attendees?.length || 0} attending</span>
                     <span className="text-[10px] font-bold text-[#0A2540] uppercase tracking-widest group-hover:text-[#B8860B] transition-colors">

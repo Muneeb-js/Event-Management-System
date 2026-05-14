@@ -86,25 +86,40 @@ const chat = asyncHandler(async (req, res) => {
   });
 
   // Convert our history format to Gemini format
-  const geminiHistory = history.map(msg => ({
+  const geminiHistory = (history || []).map(msg => ({
     role: msg.role === 'assistant' ? 'model' : 'user',
-    parts: [{ text: msg.content }],
+    parts: [{ text: msg.content || "" }],
   }));
 
-  const chatSession = model.startChat({
-    history: geminiHistory,
-    generationConfig: {
-      maxOutputTokens: 1024,
-      temperature: 0.7,
-    },
-  });
+  try {
+    const chatSession = model.startChat({
+      history: geminiHistory,
+      generationConfig: {
+        maxOutputTokens: 1024,
+        temperature: 0.7,
+      },
+    });
 
-  const result = await chatSession.sendMessage(message);
-  const reply = result.response.text();
+    const result = await chatSession.sendMessage(message);
+    const reply = result.response.text();
 
-  return res.status(200).json(
-    new ApiResponse(200, { reply }, 'Response generated successfully')
-  );
+    return res.status(200).json(
+      new ApiResponse(200, { reply }, 'Response generated successfully')
+    );
+  } catch (error) {
+    console.error("Gemini API Error details:", error);
+    
+    // Check for specific Gemini error types
+    if (error.message?.includes('API_KEY_INVALID') || error.message?.includes('API key not found')) {
+      throw new ApiError(401, 'Invalid API Key. Please check your server configuration.');
+    }
+    
+    if (error.message?.includes('leaked') || error.status === 403) {
+      throw new ApiError(503, 'AI Assistant key has been revoked. Please rotate the API key.');
+    }
+
+    throw new ApiError(500, `AI Assistant Error: ${error.message || 'Unknown error occurred'}`);
+  }
 });
 
 export { chat };

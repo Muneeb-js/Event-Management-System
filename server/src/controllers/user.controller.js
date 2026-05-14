@@ -66,11 +66,11 @@ const loginUser=asyncHandler(async (req,res)=>{
         $or:[{username},{email}]
      })
 
-    if(!user) throw new ApiError(400,"User does not Exist")
+    if(!user) throw new ApiError(400,"Invalid email or password")
     
     const isPasswordValid=await user.isPasswordCorrect(password)
 
-    if(!isPasswordValid) throw new ApiError(400,"Your Password is not valid")
+    if(!isPasswordValid) throw new ApiError(400,"Invalid email or password")
     
     const {accessToken,refreshToken}=await generateAccessAndRefreshTokens(user._id)
 
@@ -162,10 +162,10 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 const changeCurrentPassword=asyncHandler(async (req,res)=>{
     const {oldPassword,newPassword}=req.body
     const user=await User.findById(req.user?._id)
-    const isPasswordCorrect=user.isPasswordCorrect(oldPassword)
+    const isPasswordCorrect = await user.isPasswordCorrect(oldPassword)
     if(!isPasswordCorrect) throw new ApiError(400,"Invalid Old Password")
     user.password=newPassword
-    user.save({validateBeforeSave:false})
+    await user.save({validateBeforeSave:false})
     return res.status(200)
     .json(
         new ApiResponse(200,{},"Password Changed Successfully")
@@ -174,7 +174,7 @@ const changeCurrentPassword=asyncHandler(async (req,res)=>{
 })
 const getCurrentUser=asyncHandler(async (req,res)=>{
     const user=await User.findById(req.user._id)
-    if(!user) throw new ApiError(200,"User not Found")
+    if(!user) throw new ApiError(404,"User not Found")
     return res.status(200).json(
         new ApiResponse(200,{user},"User Fetched Successfully")
     )

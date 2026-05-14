@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import config from '../config';
 import Navbar from '../components/Navbar';
 import { useAuth } from '../context/AuthContext';
+import DOMPurify from 'dompurify';
 
 const categoryColors = {
   ACADEMIC: 'bg-blue-50 text-blue-600',
@@ -157,7 +158,20 @@ const EventDetails = () => {
             {/* Description */}
             <div className="bg-white border border-gray-100 rounded-lg p-8 shadow-sm">
               <h2 className="text-[15px] font-bold text-[#0A2540] uppercase tracking-widest mb-4">About This Event</h2>
-              <p className="text-gray-600 leading-relaxed font-serif text-[14px] whitespace-pre-line">{event.description}</p>
+              <div 
+                className="text-gray-600 leading-relaxed font-serif text-[14px] whitespace-normal rich-text-content"
+                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(event.description) }}
+              />
+              <style>{`
+                .rich-text-content h1 { font-size: 1.5rem; font-weight: bold; margin: 1rem 0; color: #0A2540; }
+                .rich-text-content h2 { font-size: 1.25rem; font-weight: bold; margin: 0.75rem 0; color: #0A2540; }
+                .rich-text-content h3 { font-size: 1.1rem; font-weight: bold; margin: 0.5rem 0; color: #0A2540; }
+                .rich-text-content p { margin-bottom: 1rem; }
+                .rich-text-content ul { list-style-type: disc; margin-left: 1.5rem; margin-bottom: 1rem; }
+                .rich-text-content ol { list-style-type: decimal; margin-left: 1.5rem; margin-bottom: 1rem; }
+                .rich-text-content a { color: #B8860B; text-decoration: underline; }
+                .rich-text-content blockquote { border-left: 4px solid #FFD700; padding-left: 1rem; font-style: italic; margin: 1rem 0; }
+              `}</style>
 
               {/* Organizer */}
               <div className="mt-8 pt-6 border-t border-gray-50">

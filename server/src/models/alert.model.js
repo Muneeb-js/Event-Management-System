@@ -22,6 +22,15 @@ const alertSchema = new mongoose.Schema({
   isRead: {
     type: Boolean,
     default: false
+  },
+  event: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Event'
+  },
+  category: {
+    type: String,
+    enum: ['general', 'registration', 'update', 'reminder'],
+    default: 'general'
   }
 }, { timestamps: true });
 

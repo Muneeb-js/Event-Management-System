@@ -9,6 +9,9 @@ const EventCard = ({ event }) => {
           src={event.coverImage || event.image || "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?auto=format&fit=crop&q=80&w=2670&ixlib=rb-4.0.3"} 
           alt={event.title}
           className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
+          onError={(e) => {
+            e.target.src = "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&q=80&w=2670";
+          }}
         />
         <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold text-indigo-600 uppercase tracking-wide">
           {event.category || 'Event'}
@@ -30,7 +33,9 @@ const EventCard = ({ event }) => {
           {event.title}
         </h3>
         {event.description && (
-          <p className="text-gray-600 text-sm mb-4 line-clamp-3 flex-1">{event.description}</p>
+          <p className="text-gray-600 text-sm mb-4 line-clamp-3 flex-1">
+            {event.description.replace(/<[^>]*>?/gm, '')}
+          </p>
         )}
         
         <div className="mt-auto pt-4 border-t border-gray-100 flex items-center justify-between">
