@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import config from '../config';
@@ -6,6 +7,7 @@ import Navbar from '../components/Navbar';
 import EventCard from '../components/EventCard';
 
 const StudentDashboard = () => {
+  const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [myEvents, setMyEvents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -93,7 +95,7 @@ const StudentDashboard = () => {
             </div>
           </div>
           
-          <button className="px-6 py-3 rounded-xl border-2 border-gray-200 font-bold text-gray-600 hover:border-indigo-600 hover:text-indigo-600 transition-all">
+          <button onClick={() => navigate('/edit-profile')} className="px-6 py-3 rounded-xl border-2 border-gray-200 font-bold text-gray-600 hover:border-indigo-600 hover:text-indigo-600 transition-all cursor-pointer">
             Edit Profile
           </button>
         </div>
@@ -117,9 +119,9 @@ const StudentDashboard = () => {
               </div>
               <h3 className="text-lg font-medium text-gray-900 mb-1">No events joined yet</h3>
               <p className="text-gray-500 mb-6">Explore events and join one to see it here!</p>
-              <a href="/events" className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 shadow-lg hover:shadow-xl transition-all">
+              <Link to="/events" className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 shadow-lg hover:shadow-xl transition-all">
                 Browse Events
-              </a>
+              </Link>
             </div>
           )}
         </div>

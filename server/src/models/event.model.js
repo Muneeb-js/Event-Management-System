@@ -48,6 +48,10 @@ const EventSchema = new mongoose.Schema({
   attendees: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User', 
+  }],
+  checkedIn: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User', 
   }]
 }, { timestamps: true });
 

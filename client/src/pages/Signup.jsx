@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import config from '../config';
+import logoImg from '../assets/Event-Management-Logo.png';
+
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -116,11 +118,13 @@ const Signup = () => {
       <div className="hidden lg:flex w-5/12 bg-[#0A2540] flex-col justify-between p-16 relative overflow-hidden">
         <div className="absolute bottom-0 left-0 w-[800px] h-[800px] bg-white/5 rounded-full blur-3xl -translate-x-1/3 translate-y-1/3"></div>
         
-        <div className="relative z-10">
+        <div className="relative z-10 flex items-center gap-3">
+          <img src={logoImg} alt="UEMS Logo" className="h-10 w-auto object-contain" />
           <Link to="/" className="text-white text-xl font-extrabold tracking-tight uppercase">
-            Academic Editorial UEMS
+            UEMS
           </Link>
         </div>
+
         
         <div className="relative z-10 max-w-lg pb-12">
           <span className="text-[#FFD700] text-[10px] font-bold uppercase tracking-widest mb-4 block">
@@ -139,14 +143,16 @@ const Signup = () => {
       <div className="w-full lg:w-7/12 flex items-center justify-center bg-white p-8 overflow-y-auto">
         <div className="w-full max-w-xl py-12">
           {/* Mobile Branding */}
-          <div className="lg:hidden mb-10 text-center">
-            <Link to="/" className="text-[#0A2540] text-xl font-extrabold tracking-tight uppercase block mb-2">
-              Academic Editorial UEMS
+          <div className="lg:hidden mb-10 flex flex-col items-center justify-center">
+            <Link to="/" className="flex items-center gap-3 mb-2">
+              <img src={logoImg} alt="UEMS Logo" className="h-10 w-auto object-contain" />
+              <span className="text-[#0A2540] text-xl font-extrabold tracking-tight uppercase">UEMS</span>
             </Link>
             <span className="text-[#B8860B] text-[10px] font-bold uppercase tracking-widest">
               Registration
             </span>
           </div>
+
 
           <div className="mb-10">
             <h2 className="text-3xl font-extrabold text-[#0A2540] mb-2">Apply for Access</h2>

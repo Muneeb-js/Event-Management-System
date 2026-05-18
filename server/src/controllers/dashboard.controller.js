@@ -188,6 +188,22 @@ const approveEvent = asyncHandler(async (req, res) => {
   ).populate('organizer', 'fullName email');
 
   if (!event) throw new ApiError(404, 'Event not found');
+
+  // Create approval notification for the organizer
+  try {
+    const alert = await Alert.create({
+      user: event.organizer._id,
+      event: event._id,
+      category: 'registration',
+      title: 'Event Approved 🎉',
+      message: `Your event "${event.title}" has been approved and is now live on the campus discovery catalog!`,
+      type: 'success'
+    });
+    emitNotification(event.organizer._id, alert);
+  } catch (err) {
+    console.error('Failed to notify organizer of approval:', err);
+  }
+
   return res.status(200).json(new ApiResponse(200, event, 'Event approved successfully'));
 });
 
@@ -202,6 +218,22 @@ const rejectEvent = asyncHandler(async (req, res) => {
   ).populate('organizer', 'fullName email');
 
   if (!event) throw new ApiError(404, 'Event not found');
+
+  // Create rejection notification for the organizer
+  try {
+    const alert = await Alert.create({
+      user: event.organizer._id,
+      event: event._id,
+      category: 'registration',
+      title: 'Event Approval Rejected ⚠️',
+      message: `Your event "${event.title}" was not approved. Please review catalog requirements and guidelines.`,
+      type: 'error'
+    });
+    emitNotification(event.organizer._id, alert);
+  } catch (err) {
+    console.error('Failed to notify organizer of rejection:', err);
+  }
+
   return res.status(200).json(new ApiResponse(200, event, 'Event rejected successfully'));
 });
 

@@ -5,6 +5,8 @@ import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
 import config from '../config';
+import logoImg from '../assets/Event-Management-Logo.png';
+
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -99,14 +101,11 @@ const Navbar = () => {
     <nav className="bg-white sticky top-0 z-50 border-b border-gray-100 shadow-sm">
       <div className="max-w-[1400px] mx-auto px-8 py-0 flex items-center justify-between h-16">
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-3 flex-shrink-0">
-          <div className="w-7 h-7 bg-[#0A2540] rounded flex items-center justify-center">
-            <svg className="w-4 h-4 text-[#FFD700]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
-            </svg>
-          </div>
+        <Link to="/" className="flex items-center gap-2 flex-shrink-0 group">
+          <img src={logoImg} alt="UEMS Logo" className="h-10 w-auto object-contain transition-transform duration-300 group-hover:scale-105" />
           <span className="font-extrabold text-[#0A2540] text-[13px] tracking-tight uppercase hidden sm:block">UEMS</span>
         </Link>
+
 
         {/* Desktop Nav Links */}
         <div className="hidden md:flex items-center gap-1">

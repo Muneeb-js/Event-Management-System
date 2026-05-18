@@ -1,5 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import logoImg from '../assets/Event-Management-Logo.png';
+
 
 const AdminSidebar = () => {
   const location = useLocation();
@@ -15,10 +17,14 @@ const AdminSidebar = () => {
   return (
     <div className="w-64 min-h-screen bg-white border-r border-gray-100 flex flex-col p-6 sticky top-0 h-screen">
       {/* Sidebar Header */}
-      <div className="mb-12">
-        <h1 className="font-extrabold text-[#0A2540] text-lg tracking-tight leading-none mb-1">ADMIN PORTAL</h1>
-        <p className="text-[10px] font-bold text-gray-400 tracking-widest uppercase">Institutional Access</p>
+      <div className="mb-12 flex items-center gap-3">
+        <img src={logoImg} alt="UEMS Logo" className="h-10 w-auto object-contain" />
+        <div>
+          <h1 className="font-extrabold text-[#0A2540] text-lg tracking-tight leading-none mb-1">ADMIN PORTAL</h1>
+          <p className="text-[10px] font-bold text-gray-400 tracking-widest uppercase">Institutional Access</p>
+        </div>
       </div>
+
 
       {/* Navigation Menu */}
       <nav className="flex-1 space-y-2">

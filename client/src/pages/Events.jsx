@@ -69,13 +69,29 @@ const EventCard = ({ event }) => (
 const Events = () => {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('ALL');
   const [sortBy, setSortBy] = useState('date');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
 
   useEffect(() => {
     fetchEvents();
+    setCurrentPage(1);
   }, [category]);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setSearch(searchInput);
+    }, 300);
+
+    return () => clearTimeout(handler);
+  }, [searchInput]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, sortBy]);
 
   const fetchEvents = async () => {
     try {
@@ -100,6 +116,9 @@ const Events = () => {
       return a.title.localeCompare(b.title);
     });
 
+  const totalPages = Math.ceil(filtered.length / itemsPerPage);
+  const currentEvents = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
   return (
     <div className="min-h-screen bg-[#F8F9FA]">
       <Navbar />
@@ -122,8 +141,8 @@ const Events = () => {
             <svg className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
             <input
               type="text"
-              value={search}
-              onChange={e => setSearch(e.target.value)}
+              value={searchInput}
+              onChange={e => setSearchInput(e.target.value)}
               placeholder="Search events or locations..."
               className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-100 rounded text-[12px] text-[#0A2540] focus:outline-none focus:border-[#0A2540] transition-colors"
             />
@@ -185,14 +204,60 @@ const Events = () => {
             <svg className="w-16 h-16 text-gray-200 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
             <h3 className="text-[15px] font-bold text-[#0A2540] mb-2">No events found</h3>
             <p className="text-[12px] text-gray-400 italic mb-6">Try adjusting your filters or search term.</p>
-            <button onClick={() => { setSearch(''); setCategory('ALL'); }}
+            <button onClick={() => { setSearchInput(''); setSearch(''); setCategory('ALL'); }}
               className="px-6 py-2 bg-[#0A2540] text-white text-[10px] font-bold uppercase tracking-widest rounded hover:bg-gray-900 transition-colors">
               Clear Filters
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filtered.map(event => <EventCard key={event._id} event={event} />)}
+          <div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {currentEvents.map(event => <EventCard key={event._id} event={event} />)}
+            </div>
+
+            {/* Premium Gold & Navy Navigation Paginator */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-2 mt-12 mb-6">
+                <button
+                  onClick={() => {
+                    setCurrentPage(prev => Math.max(prev - 1, 1));
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  disabled={currentPage === 1}
+                  className="px-4 py-2 border border-gray-200 hover:border-[#0A2540] text-[#0A2540] disabled:opacity-30 disabled:hover:border-gray-200 text-[10px] font-extrabold uppercase tracking-widest rounded transition-all flex items-center gap-1 cursor-pointer disabled:cursor-not-allowed bg-white shadow-sm"
+                >
+                  ← Prev
+                </button>
+
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(pageNum => (
+                  <button
+                    key={pageNum}
+                    onClick={() => {
+                      setCurrentPage(pageNum);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    className={`w-9 h-9 text-[11px] font-extrabold uppercase rounded transition-all cursor-pointer border shadow-sm ${
+                      currentPage === pageNum
+                        ? 'bg-[#0A2540] border-[#0A2540] text-white'
+                        : 'bg-white border-gray-100 text-[#0A2540] hover:border-gray-300'
+                    }`}
+                  >
+                    {pageNum.toString().padStart(2, '0')}
+                  </button>
+                ))}
+
+                <button
+                  onClick={() => {
+                    setCurrentPage(prev => Math.min(prev + 1, totalPages));
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  disabled={currentPage === totalPages}
+                  className="px-4 py-2 border border-gray-200 hover:border-[#0A2540] text-[#0A2540] disabled:opacity-30 disabled:hover:border-gray-200 text-[10px] font-extrabold uppercase tracking-widest rounded transition-all flex items-center gap-1 cursor-pointer disabled:cursor-not-allowed bg-white shadow-sm"
+                >
+                  Next →
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>

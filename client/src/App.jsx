@@ -13,6 +13,7 @@ import EditProfile from './pages/EditProfile';
 import PreviousEvents from './pages/PreviousEvents';
 import Calendar from './pages/Calendar';
 import AskAnything from './pages/AskAnything';
+import CheckInPass from './pages/CheckInPass';
 import ProtectedRoute from './components/ProtectedRoute';
 import './App.css';
 
@@ -26,6 +27,11 @@ function App() {
         <Route path="/events/:id" element={<EventDetails />} />
         
         {/* Protected Routes */}
+        <Route path="/events/:eventId/checkin-pass/:studentId" element={
+          <ProtectedRoute>
+            <CheckInPass />
+          </ProtectedRoute>
+        } />
         <Route path="/events/:id/edit" element={
           <ProtectedRoute allowedRoles={['teacher', 'admin']}>
             <EditEvent />

@@ -2,9 +2,11 @@ import { asyncHandler } from '../utils/asyncHandler.js';
 import { ApiError } from '../utils/ApiError.js';
 import { ApiResponse } from '../utils/ApiResponse.js';
 import { Event } from '../models/event.model.js';
+import { LobbyMessage } from '../models/lobbyMessage.model.js';
 import { uploadOnCloudinary } from '../utils/cloudinary.js';
 import { Alert } from '../models/alert.model.js';
 import { emitNotification } from '../socket.js';
+import { User } from '../models/user.model.js';
 
 const createEvent = asyncHandler(async (req, res) => {
     const { title, description, date, time, location } = req.body;
@@ -36,6 +38,29 @@ const createEvent = asyncHandler(async (req, res) => {
         organizer: req.user._id,
         status: req.user.role === 'admin' ? 'approved' : 'pending'
     });
+
+    // Notify all admins if event is pending approval
+    if (event.status === 'pending') {
+        try {
+            const admins = await User.find({ role: 'admin' });
+            const adminAlerts = admins.map(admin => ({
+                user: admin._id,
+                event: event._id,
+                category: 'registration',
+                title: 'New Event Awaiting Review',
+                message: `"${event.title}" has been created by ${req.user.fullName} and requires approval.`,
+                type: 'info'
+            }));
+            if (adminAlerts.length > 0) {
+                const alerts = await Alert.insertMany(adminAlerts);
+                alerts.forEach(alert => {
+                    emitNotification(alert.user, alert);
+                });
+            }
+        } catch (err) {
+            console.error('Failed to notify admins:', err);
+        }
+    }
 
     return res.status(201).json(
         new ApiResponse(201, event, "Event created successfully")
@@ -93,7 +118,10 @@ const getAllEvents = asyncHandler(async (req, res) => {
 
 const getEventById = asyncHandler(async (req, res) => {
     const { id } = req.params;
-    const event = await Event.findById(id).populate('organizer', 'fullName email').populate('attendees', 'fullName email');
+    const event = await Event.findById(id)
+        .populate('organizer', 'fullName email')
+        .populate('attendees', 'fullName email')
+        .populate('checkedIn', 'fullName email');
 
     if (!event) {
         throw new ApiError(404, "Event not found");
@@ -245,6 +273,82 @@ const updateEvent = asyncHandler(async (req, res) => {
     );
 });
 
+const checkInEvent = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const { studentId } = req.body;
+
+    const event = await Event.findById(id);
+
+    if (!event) {
+        throw new ApiError(404, "Event not found");
+    }
+
+    // Determine target user to check-in: either specified in body (organizer scanning), or logged-in student (self test)
+    const targetUserId = studentId || req.user._id;
+
+    // Check if the user is registered as attendee
+    if (!event.attendees.some(attendeeId => attendeeId.toString() === targetUserId.toString())) {
+        throw new ApiError(400, "User is not registered as an attendee for this event");
+    }
+
+    // Check if already checked in
+    if (event.checkedIn && event.checkedIn.some(checkedId => checkedId.toString() === targetUserId.toString())) {
+        return res.status(200).json(
+            new ApiResponse(200, event, "User has already checked in")
+        );
+    }
+
+    if (!event.checkedIn) {
+        event.checkedIn = [];
+    }
+
+    event.checkedIn.push(targetUserId);
+    await event.save();
+
+    // Create check-in notification for the student
+    const alert = await Alert.create({
+        user: targetUserId,
+        event: event._id,
+        category: "registration",
+        title: "Attendance Verified",
+        message: `Your ticket has been successfully validated. You are checked-in for "${event.title}".`,
+        type: "success"
+    });
+
+    // Emit real-time notification
+    emitNotification(targetUserId, alert);
+
+    return res.status(200).json(
+        new ApiResponse(200, event, "Check-in successful! Ticket validated.")
+    );
+});
+
+const getLobbyMessages = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    
+    // Check if the user is registered as attendee (or organizer or admin)
+    const event = await Event.findById(id);
+    if (!event) {
+        throw new ApiError(404, "Event not found");
+    }
+
+    const isAttendee = event.attendees.some(attendeeId => attendeeId.toString() === req.user._id.toString());
+    const isOrganizer = event.organizer.toString() === req.user._id.toString();
+    const isAdmin = req.user.role === 'admin';
+
+    if (!isAttendee && !isOrganizer && !isAdmin) {
+        throw new ApiError(403, "You must be registered for this event to view the discussion lobby");
+    }
+
+    const messages = await LobbyMessage.find({ event: id })
+        .sort({ createdAt: 1 }) // oldest first
+        .limit(100);
+
+    return res.status(200).json(
+        new ApiResponse(200, messages, "Lobby messages fetched successfully")
+    );
+});
+
 export {
     createEvent,
     getAllEvents,
@@ -252,5 +356,7 @@ export {
     joinEvent,
     leaveEvent,
     deleteEvent,
-    updateEvent
+    updateEvent,
+    checkInEvent,
+    getLobbyMessages
 };

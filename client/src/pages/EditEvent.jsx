@@ -26,7 +26,17 @@ const EditEvent = () => {
   const [existingCoverImage, setExistingCoverImage] = useState('');
 
   const categories = ['ACADEMIC', 'WORKSHOP', 'SOCIAL', 'CONFERENCE', 'SPORTS', 'TECHNICAL', 'GENERAL'];
-  const departments = ['All Departments', 'Computer Science', 'Engineering', 'Medicine', 'Arts & Humanities', 'Business School', 'Law', 'Sciences', 'Social Sciences'];
+  const departments = [
+    'All Departments', 
+    'Computer Science', 
+    'Engineering', 
+    'Medicine', 
+    'Arts & Humanities', 
+    'Business School', 
+    'Law', 
+    'Sciences', 
+    'Social Sciences'
+  ];
 
   useEffect(() => {
     fetchEventDetails();
@@ -98,7 +108,7 @@ const EditEvent = () => {
 
       if (response.data?.success) {
         toast.success('Event updated successfully!');
-        navigate(`/events/${id}`);
+        navigate(-1);
       }
     } catch (error) {
       console.error('Update event error:', error);
@@ -126,166 +136,226 @@ const EditEvent = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA] pb-20">
+    <div className="min-h-screen bg-[#FAFBFD] pb-24 text-[#0A2540] selection:bg-[#FFD700] selection:text-[#0A2540]">
       <Navbar />
 
-      {/* Premium Header */}
-      <div className="bg-[#0A2540] px-8 py-12 relative overflow-hidden mb-12">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-[#FFD700]/5 rounded-full blur-3xl translate-x-1/2 -translate-y-1/2" />
-        <div className="max-w-[800px] mx-auto relative">
-          <Link to={`/events/${id}`} className="text-[#FFD700] text-[10px] font-bold uppercase tracking-[0.2em] hover:opacity-80 transition-opacity flex items-center gap-2 mb-4">
-            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
-            Back to Event Details
-          </Link>
-          <h1 className="text-4xl font-extrabold text-white tracking-tight mb-2">Edit Event</h1>
-          <p className="text-white/50 font-serif italic text-sm">
-            Modify the institutional record for this event.
+      {/* Full-Width Premium Header */}
+      <div className="bg-gradient-to-r from-[#030914] to-[#0A2540] py-16 relative overflow-hidden mb-12 shadow-md">
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[#FFD700]/5 rounded-full blur-[120px] translate-x-1/3 -translate-y-1/3" />
+        <div className="max-w-[1400px] mx-auto px-8 relative z-10">
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="text-[#FFD700] text-[10px] font-bold uppercase tracking-[0.25em] hover:text-white transition-colors flex items-center gap-2 mb-4 cursor-pointer"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+            Back to Event details
+          </button>
+          <h1 className="text-4xl md:text-5xl font-extrabold text-white tracking-tight leading-none mb-3">Edit Event Record</h1>
+          <p className="text-white/60 font-serif italic text-sm md:text-base">
+            Adjust coordinates, timings, and institutional contents of this campus scheduling registry.
           </p>
         </div>
       </div>
 
-      <div className="max-w-[800px] mx-auto px-8">
-        <form onSubmit={handleSubmit} className="bg-white border border-gray-100 rounded-lg shadow-sm overflow-hidden">
-          {/* Cover Image Upload Area */}
-          <div className="relative h-64 bg-gray-50 border-b border-gray-100 group cursor-pointer overflow-hidden">
-            <img 
-              src={previewUrl || existingCoverImage || 'https://via.placeholder.com/800x400'} 
-              alt="Preview" 
-              className="w-full h-full object-cover" 
-            />
-            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-              <p className="text-white text-xs font-bold uppercase tracking-widest">Update Cover Image</p>
-            </div>
-            <input 
-              type="file" 
-              onChange={handleFileChange}
-              className="absolute inset-0 opacity-0 cursor-pointer"
-              accept="image/*"
-            />
-          </div>
-
-          <div className="p-10 space-y-8">
-            {/* Basic Info Section */}
-            <div className="space-y-6">
-              <div>
-                <label htmlFor="title" className="block text-[10px] font-bold text-[#0A2540] uppercase tracking-widest mb-3">Event Title</label>
-                <input
-                  id="title"
-                  type="text"
-                  required
-                  placeholder="e.g. International Symposium on Quantum Artificial Intelligence"
-                  value={formData.title}
-                  onChange={handleChange}
-                  className="w-full border-b-2 border-gray-100 py-3 text-[15px] font-bold text-[#0A2540] bg-transparent focus:outline-none focus:border-[#FFD700] transition-colors"
-                />
+      {/* Full Screen Main Area */}
+      <div className="max-w-[1400px] mx-auto px-8">
+        <form onSubmit={handleSubmit} className="animate-fade-in-up">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+            
+            {/* Left Column: Image and Specifications (5 cols) */}
+            <div className="lg:col-span-5 space-y-10">
+              
+              {/* Image Upload Banner */}
+              <div className="bg-white border border-gray-100 rounded-md shadow-sm overflow-hidden">
+                <div className="relative h-64 bg-gray-50 border-b border-gray-100 group cursor-pointer overflow-hidden">
+                  <img 
+                    src={previewUrl || existingCoverImage || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?q=80&w=1200&auto=format&fit=crop'} 
+                    alt="Preview" 
+                    className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-700 ease-out" 
+                  />
+                  <div className="absolute inset-0 bg-[#0A2540]/60 opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col items-center justify-center gap-3 backdrop-blur-sm">
+                    <div className="w-12 h-12 rounded-full border border-white/20 bg-white/10 flex items-center justify-center text-white text-xl">
+                      📸
+                    </div>
+                    <p className="text-white text-[10px] font-bold uppercase tracking-widest">Replace cover image</p>
+                    <p className="text-white/50 text-[9px] font-medium tracking-normal">Supports JPEG, PNG, WEBP</p>
+                  </div>
+                  <input 
+                    type="file" 
+                    onChange={handleFileChange}
+                    className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                    accept="image/*"
+                  />
+                </div>
+                <div className="p-6 bg-gray-50/50">
+                  <p className="text-[10px] font-semibold text-gray-400 leading-normal text-center">Drag and drop or click on the banner to upload a custom event cover photo.</p>
+                </div>
               </div>
 
-              <div className="quill-container">
-                <label className="block text-[10px] font-bold text-[#0A2540] uppercase tracking-widest mb-3">Institutional Description</label>
-                <ReactQuill 
-                  theme="snow"
-                  value={formData.description}
-                  onChange={handleDescriptionChange}
-                  modules={modules}
-                  placeholder="Provide a detailed overview..."
-                  className="bg-gray-50/50 rounded-lg overflow-hidden border border-gray-100"
-                />
-                <style>{`
-                  .quill-container .ql-toolbar { border: none; border-bottom: 1px solid #f3f4f6; background: #fff; }
-                  .quill-container .ql-container { border: none; min-height: 200px; font-family: inherit; font-size: 14px; }
-                  .quill-container .ql-editor { line-height: 1.6; color: #4b5563; }
-                  .quill-container .ql-editor.ql-blank::before { color: #d1d5db; font-style: normal; }
-                `}</style>
+              {/* 01. Specification Card */}
+              <div className="bg-white border border-gray-100 rounded-md p-8 shadow-sm space-y-6">
+                <div className="flex items-center gap-3 border-b border-gray-50 pb-4">
+                  <span className="text-[#B8860B] text-[10px] font-bold uppercase tracking-[0.2em]">01</span>
+                  <h3 className="text-sm font-extrabold text-[#0A2540] uppercase tracking-wider">Specification Details</h3>
+                </div>
+
+                <div className="space-y-6">
+                  <div>
+                    <label htmlFor="title" className="block text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-2.5">Event Title</label>
+                    <input
+                      id="title"
+                      type="text"
+                      required
+                      placeholder="e.g. International Symposium on Artificial Intelligence"
+                      value={formData.title}
+                      onChange={handleChange}
+                      className="w-full border-b border-gray-200 py-3 text-[15px] font-bold text-[#0A2540] placeholder-gray-300 bg-transparent focus:outline-none focus:border-[#FFD700] transition-colors"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="category" className="block text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-2.5">Event Category</label>
+                    <div className="relative">
+                      <select
+                        id="category"
+                        value={formData.category}
+                        onChange={handleChange}
+                        className="w-full border-b border-gray-200 py-3 text-sm font-semibold text-[#0A2540] bg-transparent focus:outline-none focus:border-[#FFD700] transition-colors appearance-none cursor-pointer"
+                      >
+                        {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                      </select>
+                      <div className="absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                        ▼
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label htmlFor="department" className="block text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-2.5">Academic Department</label>
+                    <div className="relative">
+                      <select
+                        id="department"
+                        value={formData.department}
+                        onChange={handleChange}
+                        className="w-full border-b border-gray-200 py-3 text-sm font-semibold text-[#0A2540] bg-transparent focus:outline-none focus:border-[#FFD700] transition-colors appearance-none cursor-pointer"
+                      >
+                        {departments.map(dept => <option key={dept} value={dept}>{dept}</option>)}
+                      </select>
+                      <div className="absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                        ▼
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* Categorization Row */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div>
-                <label htmlFor="category" className="block text-[10px] font-bold text-[#0A2540] uppercase tracking-widest mb-3">Category</label>
-                <select
-                  id="category"
-                  value={formData.category}
-                  onChange={handleChange}
-                  className="w-full border-b-2 border-gray-100 py-3 text-[13px] font-bold text-[#0A2540] bg-transparent focus:outline-none focus:border-[#FFD700] transition-colors appearance-none cursor-pointer"
+            {/* Right Column: Logistics and Editor (7 cols) */}
+            <div className="lg:col-span-7 space-y-10">
+              
+              {/* 02. Logistics coordinates */}
+              <div className="bg-white border border-gray-100 rounded-md p-8 shadow-sm space-y-6">
+                <div className="flex items-center gap-3 border-b border-gray-50 pb-4">
+                  <span className="text-[#B8860B] text-[10px] font-bold uppercase tracking-[0.2em]">02</span>
+                  <h3 className="text-sm font-extrabold text-[#0A2540] uppercase tracking-wider">Logistical Coordinates</h3>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div>
+                    <label htmlFor="date" className="block text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-2.5">Date</label>
+                    <input
+                      id="date"
+                      type="date"
+                      required
+                      value={formData.date}
+                      onChange={handleChange}
+                      className="w-full border-b border-gray-200 py-3 text-sm font-semibold text-[#0A2540] bg-transparent focus:outline-none focus:border-[#FFD700] transition-colors cursor-pointer"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="time" className="block text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-2.5">Start Time</label>
+                    <input
+                      id="time"
+                      type="time"
+                      required
+                      value={formData.time}
+                      onChange={handleChange}
+                      className="w-full border-b border-gray-200 py-3 text-sm font-semibold text-[#0A2540] bg-transparent focus:outline-none focus:border-[#FFD700] transition-colors cursor-pointer"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="location" className="block text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-2.5">Venue Location</label>
+                    <input
+                      id="location"
+                      type="text"
+                      required
+                      placeholder="e.g. Science Hall 4A"
+                      value={formData.location}
+                      onChange={handleChange}
+                      className="w-full border-b border-gray-200 py-3 text-sm font-semibold text-[#0A2540] placeholder-gray-300 bg-transparent focus:outline-none focus:border-[#FFD700] transition-colors"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* 03. Institutional Context Editor */}
+              <div className="bg-white border border-gray-100 rounded-md p-8 shadow-sm space-y-6">
+                <div className="flex items-center gap-3 border-b border-gray-50 pb-4">
+                  <span className="text-[#B8860B] text-[10px] font-bold uppercase tracking-[0.2em]">03</span>
+                  <h3 className="text-sm font-extrabold text-[#0A2540] uppercase tracking-wider">Detailed Description</h3>
+                </div>
+
+                <div className="quill-container">
+                  <label className="block text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-3">Institutional Context</label>
+                  <ReactQuill 
+                    theme="snow"
+                    value={formData.description}
+                    onChange={handleDescriptionChange}
+                    modules={modules}
+                    placeholder="Draft detailed academic descriptions or schedules..."
+                    className="bg-gray-50/20 rounded-sm overflow-hidden border border-gray-100 shadow-sm"
+                  />
+                  <style>{`
+                    .quill-container .ql-toolbar { border: none; border-bottom: 1px solid #f3f4f6; background: #fafbfc; padding: 12px; }
+                    .quill-container .ql-container { border: none; min-height: 220px; font-family: inherit; font-size: 14px; }
+                    .quill-container .ql-editor { line-height: 1.7; color: #4b5563; }
+                    .quill-container .ql-editor.ql-blank::before { color: #cbd5e1; font-style: normal; }
+                    .quill-container .ql-snow.ql-toolbar button:hover,
+                    .quill-container .ql-snow .ql-toolbar button:hover { color: #FFD700; fill: #FFD700; }
+                  `}</style>
+                </div>
+              </div>
+
+              {/* Action Buttons Panel */}
+              <div className="bg-white border border-gray-100 rounded-md p-6 shadow-sm flex flex-col sm:flex-row gap-4 justify-end items-center">
+                <button
+                  type="button"
+                  onClick={() => navigate(-1)}
+                  className="w-full sm:w-auto px-10 py-3.5 border border-gray-200 text-gray-400 text-[10px] font-bold uppercase tracking-widest rounded-sm hover:bg-gray-50 hover:text-gray-600 transition-colors text-center cursor-pointer"
                 >
-                  {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-                </select>
-              </div>
-
-              <div>
-                <label htmlFor="department" className="block text-[10px] font-bold text-[#0A2540] uppercase tracking-widest mb-3">Institutional Department</label>
-                <select
-                  id="department"
-                  value={formData.department}
-                  onChange={handleChange}
-                  className="w-full border-b-2 border-gray-100 py-3 text-[13px] font-bold text-[#0A2540] bg-transparent focus:outline-none focus:border-[#FFD700] transition-colors appearance-none cursor-pointer"
+                  Cancel Changes
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full sm:w-auto px-10 py-3.5 bg-[#0A2540] hover:bg-[#123E66] text-white text-[10px] font-bold uppercase tracking-widest transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed rounded-sm shadow-md hover:shadow-lg flex items-center justify-center gap-2"
                 >
-                  {departments.map(dept => <option key={dept} value={dept}>{dept}</option>)}
-                </select>
+                  {loading ? (
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <>
+                      Save Registry Record
+                      <span>✓</span>
+                    </>
+                  )}
+                </button>
               </div>
+
             </div>
 
-            {/* Logistics Section */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div>
-                <label htmlFor="date" className="block text-[10px] font-bold text-[#0A2540] uppercase tracking-widest mb-3">Date</label>
-                <input
-                  id="date"
-                  type="date"
-                  required
-                  value={formData.date}
-                  onChange={handleChange}
-                  className="w-full border-b-2 border-gray-100 py-3 text-[13px] font-bold text-[#0A2540] bg-transparent focus:outline-none focus:border-[#FFD700] transition-colors"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="time" className="block text-[10px] font-bold text-[#0A2540] uppercase tracking-widest mb-3">Start Time</label>
-                <input
-                  id="time"
-                  type="time"
-                  required
-                  value={formData.time}
-                  onChange={handleChange}
-                  className="w-full border-b-2 border-gray-100 py-3 text-[13px] font-bold text-[#0A2540] bg-transparent focus:outline-none focus:border-[#FFD700] transition-colors"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="location" className="block text-[10px] font-bold text-[#0A2540] uppercase tracking-widest mb-3">Location/Venue</label>
-                <input
-                  id="location"
-                  type="text"
-                  required
-                  placeholder="e.g. Grand Auditorium"
-                  value={formData.location}
-                  onChange={handleChange}
-                  className="w-full border-b-2 border-gray-100 py-3 text-[13px] font-bold text-[#0A2540] bg-transparent focus:outline-none focus:border-[#FFD700] transition-colors"
-                />
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="pt-10 flex gap-4 justify-center">
-              <Link
-                to={`/events/${id}`}
-                className="px-10 py-3 border border-gray-200 text-gray-500 text-[11px] font-bold uppercase tracking-widest rounded hover:bg-gray-50 transition-colors"
-              >
-                Cancel
-              </Link>
-              <button
-                type="submit"
-                disabled={loading}
-                className="px-10 py-3 bg-[#0A2540] hover:bg-gray-900 text-white text-[11px] font-bold uppercase tracking-widest transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed rounded shadow-lg hover:shadow-xl"
-              >
-                {loading ? (
-                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                ) : (
-                  'Save Institutional Record'
-                )}
-              </button>
-            </div>
           </div>
         </form>
       </div>
